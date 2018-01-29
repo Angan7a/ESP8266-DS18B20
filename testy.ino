@@ -297,6 +297,10 @@ client.print("]");
   client.println("</head>");
   client.println("<body>");
     client.println("<div id='chart_div' style='width: 900px; height: 500px;'></div>");
+///////////////////////////////////////
+    client.println("<form action='/\' method='get'>");
+    client.println("<button class='my_linkable_button'>Odśwież</button>");
+
   client.println("</body>");
   
   /*client.print("Led pin is now: ");
