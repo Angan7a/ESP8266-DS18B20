@@ -299,7 +299,7 @@ client.print("]");
     client.println("<div id='chart_div' style='width: 900px; height: 500px;'></div>");
 ///////////////////////////////////////
     client.println("<form action='/\' method='get'>");
-    client.println("<button class='my_linkable_button'>Odśwież</button>");
+    client.println("<button style='height:300px;width:300px'>Odśwież</button>");
 
   client.println("</body>");
   
