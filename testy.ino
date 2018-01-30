@@ -220,13 +220,16 @@ void loop() {
   while(!client.available()){
     delay(1);
   }
-   
+  
   // Read the first line of the request
+  char date[20];
+  int k = 0;
   String request = client.readStringUntil('\r');
   for(int i = 33; i < (request.length()-9); ++i) {
-    Serial.println(request[i]);
+    date[k++] = request[i];
   }
-  Serial.println(request);
+  if(k>0) {date[k] = '\0'; Serial.println(date);}
+  
   client.flush();
 
    
@@ -267,7 +270,7 @@ client.print("]");
             client.print(",");
             client.print(temp[i]);
             client.print(",");
-           if(b[i] == 0) { client.print("'A'");} else {client.print("null");};
+           if(b[i] == 0) { client.print(date);} else {client.print("null");};
            client.print("]");
            client.println("");
            in = 1;
@@ -287,7 +290,7 @@ client.print("]");
             client.print(",");
             client.print(temp[i]);
             client.print(",");
-           if(b[i] == 0) { client.print("'A'");} else {client.print("null");};
+           if(b[i] == 0) { client.print(date);} else {client.print("null");};
            client.print("]");
            client.println("");
           }
@@ -315,10 +318,12 @@ client.print("]");
   client.println("<body>");
     client.println("<div id='chart_div' style='width: 900px; height: 500px;'></div>");
 ///////////////////////////////////////
-    client.println("<form action='/action_page.php'>");
-    client.println("<p>Co zrobiono:</p>");
-    client.println("<input style='height:100px;width:600px' type='text' name='co_zrobiono'><br>");
-    client.println("<input type='submit' value='Submit'>");
+    client.println("<form action='/action_page.php' >");
+    client.println("<div>");
+    client.println("<label style='font-size: 25px;height:90px;width:100px;'for='co_zrobiono'>Co zrobiono:  </label>");
+    client.println("<input style='font-size: 25px;height:90px;width:100px;' type='text' name='co_zrobiono'><br>");
+    client.println("<input style='font-szie: 65px;height:90px;width:100px; padding: 15px 32px;'type='submit' value='Submit'>");
+    client.println("<div>");
     client.println("</form>");
 
 
