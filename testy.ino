@@ -211,9 +211,24 @@ void loop() {
   // Check if a client has connecteddigitalWrite(ledB, HIGH);
   WiFiClient client = server.available();
   if (!client) {
-  //  t++;
     return;
   }
+
+
+// Wait until the client sends some data
+  Serial.println("new client");
+  while(!client.available()){
+    delay(1);
+  }
+   
+  // Read the first line of the request
+  String request = client.readStringUntil('\r');
+  for(int i = 33; i < (request.length()-9); ++i) {
+    Serial.println(request[i]);
+  }
+  Serial.println(request);
+  client.flush();
+
    
   // Return the response
   client.println("HTTP/1.1 200 OK");
@@ -287,7 +302,9 @@ client.print("]");
         client.println("]);");
  
         client.println("var options = {");
-          client.println("annotations: {textStyle: {fontName: 'Times-Roman',     fontSize: 28, bold: true, italic: true,      color: 'black',      opacity: 0.8    }  }");
+          client.println("annotations: { textStyle: {fontName: 'Times-Roman',     fontSize: 28, bold: true, italic: true,      color: 'black',      opacity: 0.8    }  },");
+        client.println("hAxis: { title: 'Godzina [hh:mm]' },");
+        client.println("vAxis: { title: 'Temperatura [*C]' }");
         client.println("};");
  
         client.println("var chart = new google.visualization.LineChart(document.getElementById('chart_div'));");
@@ -298,8 +315,16 @@ client.print("]");
   client.println("<body>");
     client.println("<div id='chart_div' style='width: 900px; height: 500px;'></div>");
 ///////////////////////////////////////
-    client.println("<form action='/\' method='get'>");
-    client.println("<button style='height:300px;width:300px'>Odśwież</button>");
+    client.println("<form action='/action_page.php'>");
+    client.println("<p>Co zrobiono:</p>");
+    client.println("<input style='height:100px;width:600px' type='text' name='co_zrobiono'><br>");
+    client.println("<input type='submit' value='Submit'>");
+    client.println("</form>");
+
+
+
+//    client.println("<form action='/\' method='get'>");
+//    client.println("<button style='height:300px;width:600px'>Odśwież</button>");
 
   client.println("</body>");
   
