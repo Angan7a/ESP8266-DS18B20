@@ -1,6 +1,8 @@
 //
 
 #include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <time.h>
@@ -30,7 +32,37 @@ int ledG = 13; // green Led
 int ledR = 15; // red Led
 int button = 4; // button
 int time_elapce = 0;  //time between measuring temperature
-WiFiServer server(80);//Service Port
+ESP8266WebServer server(80);
+
+void handleRoot() {
+  int sec = millis() / 1000;
+   int min = sec / 60;
+   int hr = min / 60;
+        char temp[420];
+   snprintf ( temp, 400,
+
+"<html>\
+  <head>\
+    <title>ESP8266 Demo</title>\
+    <style>\
+      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
+    </style>\
+  </head>\
+  <body>\
+    <h1>Hello from ESP8266!</h1>\
+    <p>Uptime: %02d:%02d:%02d</p>\
+    <form action='http://192.168.4.1' method='get'>\
+    F_name: <input type='text' name='fname'><br>\
+    <input type='submit' value='Submit'>\
+</form>\
+  </body>\
+</html>",
+
+      hr, min % 60, sec % 60
+   );
+  server.send(200, "text/html", temp);
+}
+
 
 
 void sendSMS(float temper) {
@@ -113,6 +145,7 @@ void setup() {
   
   // Start the server
   server.begin();
+server.on("/", handleRoot);
   Serial.println("Server started");
  
   // Print the IP address
@@ -159,207 +192,7 @@ float getTemperature() {
 
  
 void loop() {
-  time_elapce++;
-  
-  if(time_elapce == 1000000 ) {
-    time_elapce = 0;
 
-    time_t now = time(nullptr);
-    char *czas = ctime(&now);
-    temper = getTemperature();
-    //Serial.print("Temperatura -");
-    Serial.print(czas);
-    //Serial.print(" - wynosi: ");
-    Serial.println(temper);
-    Serial.println("");
-    
-    
-    temp[n] = temper;
-    h[n] = (czas[11] - '0')*10 + czas[12] - '0';
-    m[n] = (czas[14] - '0')*10 + czas[15] - '0';
-    s[n] = (czas[17] - '0')*10 + czas[18] - '0';
-    b[n] = digitalRead(button);
-    Serial.println(b[n]);
-    n++;
+server.handleClient();
 
-    if(n == BUF) n = 0;
-  
-    digitalWrite(ledPin, HIGH);
-    digitalWrite(ledR, LOW);
-    digitalWrite(ledG, LOW);
-    digitalWrite(ledB, LOW);
-    digitalWrite(ledR, LOW);
-        if( temper < tempLBase) {
-           if( temper < tempL) { sendSMS(temper); tempL = temper - delta; }
-           digitalWrite(ledB, HIGH);
-        } else if( temper < tempHBase ) {
-          digitalWrite(ledG, HIGH);
-          tempL = tempLBase;
-          tempH = tempHBase;
-        } else {
-          if( temper > tempH) { sendSMS(temper); tempH = temper + delta; }
-            digitalWrite(ledR, HIGH);
-        }
-
-       //if(digitalRead(button) == 0) { sendSMS(temper);}
-   
-   
-}
-
-
- 
-  // Check if a client has connecteddigitalWrite(ledB, HIGH);
-  WiFiClient client = server.available();
-  if (!client) {
-    return;
-  }
-
-
-// Wait until the client sends some data
-  Serial.println("new client");
-  while(!client.available()){
-    delay(1);
-  }
-  
-  // Read the first line of the request
-  char date[20];
-  int k = 0;
-  String request = client.readStringUntil('\r');
-  for(int i = 33; i < (request.length()-9); ++i) {
-    date[k++] = request[i];
-  }
-  if(k>0) {date[k] = '\0'; Serial.println(date);}
-  
-  client.flush();
-
-   
-  // Return the response
-  client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: text/html");
-  client.println(""); //  do not forget this one
-  client.println("<!DOCTYPE HTML>");
-  client.println("<html>");
-
-   client.println("<head>");
-    client.println("<script type='text/javascript' src='https://www.google.com/jsapi'></script>");
-    client.println("<script type='text/javascript'>");
-      client.println("google.load('visualization', '1', {packages:['corechart', 'controls']});");
-      client.println("google.setOnLoadCallback(drawChart);");
-      client.println("function drawChart() {");
-        client.println("var data = new google.visualization.DataTable();");
-          client.println("data.addColumn('timeofday', 'Czas');");
-          client.println("data.addColumn('number', 'Temperatura');");
-          client.println("data.addColumn({type:'string', role:'annotation'}); ");
-
-bool in=0;
-          client.println("data.addRows([");
-           
-          for(int i = n; (temp[i] != 0) && (i<BUF) ; ++i) {
-           //client.print("jestem w jedynce i n wynosi");
-           //client.println(n);
-             if(i != n) client.print(",");
-            client.print("[");
-
-client.print("[");
-            client.print(h[i]);
-            client.print(",");
-            client.print(m[i]);
-            client.print(",");
-            client.print(s[i]);
-client.print("]");
-            client.print(",");
-            client.print(temp[i]);
-            client.print(",");
-           if(b[i] == 0) { client.print(date);} else {client.print("null");};
-           client.print("]");
-           client.println("");
-           in = 1;
-          }
-          
-          for(int i = 0; (temp[i] != 0) && (i<n) ; ++i) {
-            if((in == 0) && (i != 0)) { client.print(", "); } else if(in == 1) { client.print(", "); }
-            client.print("[");
-
-client.print("[");
-            client.print(h[i]);
-            client.print(",");
-            client.print(m[i]);
-            client.print(",");
-            client.print(s[i]);
-client.print("]");
-            client.print(",");
-            client.print(temp[i]);
-            client.print(",");
-           if(b[i] == 0) { client.print(date);} else {client.print("null");};
-           client.print("]");
-           client.println("");
-          }
-          //Serial.println("[[8,30,30],  22.34, null],");
-          //client.println("[[8,30,31],  22.45,'a'],");
-          //client.println("[[8,30,32], 25.13, null]");
-          //client.println("['2007', 25.26],");
-          //client.println("['2008', 25.89],");
-          //client.println("['2009', 25.78],");
-          //client.println("['2010', 25.3],");
-          //client.println("['2011',  23.4]");
-        client.println("]);");
- 
-        client.println("var options = {");
-          client.println("annotations: { textStyle: {fontName: 'Times-Roman',     fontSize: 28, bold: true, italic: true,      color: 'black',      opacity: 0.8    }  },");
-        client.println("hAxis: { title: 'Godzina [hh:mm]' },");
-        client.println("vAxis: { title: 'Temperatura [*C]' }");
-        client.println("};");
- 
-        client.println("var chart = new google.visualization.LineChart(document.getElementById('chart_div'));");
-        client.println("chart.draw(data, options);");
-      client.println("}");
-    client.println("</script>");
-  client.println("</head>");
-  client.println("<body>");
-    client.println("<div id='chart_div' style='width: 900px; height: 500px;'></div>");
-///////////////////////////////////////
-    client.println("<form action='/action_page.php' >");
-    client.println("<div>");
-    client.println("<label style='font-size: 25px;height:90px;width:100px;'for='co_zrobiono'>Co zrobiono:  </label>");
-    client.println("<input style='font-size: 25px;height:90px;width:100px;' type='text' name='co_zrobiono'><br>");
-    client.println("<input style='font-szie: 65px;height:90px;width:100px; padding: 15px 32px;'type='submit' value='Submit'>");
-    client.println("<div>");
-    client.println("</form>");
-
-
-
-//    client.println("<form action='/\' method='get'>");
-//    client.println("<button style='height:300px;width:600px'>Odśwież</button>");
-
-  client.println("</body>");
-  
-  /*client.print("Led pin is now: ");
-  float d=67.45;
-  client.println("<br>");
-  client.print("Button is: ");
-  client.print(digitalRead(button));
-
-  client.println("<br>");
-  client.print("LDR =  ");
-  client.print(analogRead(LDR));
-
- 
-  client.println("<br><br>");
- 
- client.println("Click <a href=\"/\">here</a> to reload page <br><br>");
- // getTemperature();
-            //client.println("<head></head><body><h1>ESP8266 - Temperature</h1><h3>Temperature in Celsius: ");
-             client.print("Temperatura in *C = ");
-            client.print(getTemperature() );
-            //client.println("*C</h3><h3>Temperature in Fahrenheit: ");
-            client.println("<br>");
-            client.print("Temperatura in *F = ");
-            client.println(temperatureFString);
-*/
- 
-  client.println("</html>");
- 
-  delay(1);
-  Serial.println("Client disconnected");
-  Serial.println("");
 }
