@@ -43,93 +43,75 @@ int ledG = 13; // green Led
 int ledR = 15; // red Led
 int button = 4; // button
 int time_elapce = 0;  //time between measuring temperature
-WiFiServer server(80);//Service Port
+
+ESP8266WebServer server(80);
 
 
-char* printHTML() {
 
+
+void handleRoot() {
   int cx = 0;
   
 
 ////////////////////////////////
 bool in=0;
-  cx += snprintf(tmp, sizze,\
-  "HTTP/1.1 200 OK\n\
-  Content-Type: text/html\n\
-  \n\
-  <!DOCTYPE HTML>\n\
-  <html>\n\
-  \n\
+  
+  //"HTTP/1.1 200 OK\
+ / Content-Type: text/html\
+  //\
+  //<!DOCTYPE HTML>
+  cx += snprintf(tmp, sizze,
+  "<html>\n\
    <head>\n\
-    <script type='text/javascript' src='https://www.google.com/jsapi'></script>\n\
-    <script type='text/javascript'>\n\
-      google.load('visualization', '1', {packages:['corechart', 'controls']});\n\
-      google.setOnLoadCallback(drawChart);\n\
-      function drawChart() {\n\
-        var data = new google.visualization.DataTable();\n\
-          data.addColumn('timeofday', 'Czas');\n\
-          data.addColumn('number', 'Temperatura');\n\
-          data.addColumn({type:'string', role:'annotation'});\n\
-          data.addRows([\n\
-  ");
+    <script type='text/javascript' src='https://www.google.com/jsapi'></script>\
+    <script type='text/javascript'>\
+      google.load('visualization', '1', {packages:['corechart', 'controls']});\
+      google.setOnLoadCallback(drawChart);\
+      function drawChart() {\
+        var data = new google.visualization.DataTable();\
+          data.addColumn('timeofday', 'Czas');\
+          data.addColumn('number', 'Temperatura');\
+          data.addColumn({type:'string', role:'annotation'});\
+          data.addRows([");
 
-  char comma;
+  char comma = ' ';
   char message[20] = {"'uchylono szyber'"};
   char Message[20];
           for(int i = n; (temp[i] != 0) && (i<BUF) ; ++i) {
-  //preparing some date
-           in = 1;
-           if(i != n) {comma=',';} else { comma=' ';}
-           if(b[i] == 0) { snprintf(Message, 20, "%s", message);;} else { snprintf(Message, 20,"null");};
-    cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %d, %s]\n", comma, h[i], m[i], s[i], temp[i], Message);
+              //preparing some date
+              in = 1;
+              if(i != n) {comma=',';} else { comma=' ';}
+              //if(b[i] == 0) { snprintf(Message, 20, "%s", message);;} else { snprintf(Message, 20,"null");};
+              cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %d, null]\n", comma, h[i], m[i], s[i], temp[i]);
           }
 
           for(int i = 0; (temp[i] != 0) && (i<n) ; ++i) {
-  //preparing some date
-            if(in == 1)  { comma=',';} else if(i == 0) {  comma=' '; }
-            if(b[i] == 0) { snprintf(Message, 20, "%s", message);;} else { snprintf(Message, 20,"null");};
-
-    cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %d, %s]\n", comma, h[i], m[i], s[i], temp[i], Message);
+              //preparing some date
+              if(in == 1)  { comma=',';} else if(i != 0) {  comma=','; } else {comma=' ';}
+              //if(b[i] == 0) { snprintf(Message, 20, "%s", message);;} else { snprintf(Message, 20,"null");};
+              cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %d, null]\n", comma, h[i], m[i], s[i], temp[i]);
           }
 ////////////////////////////////////////////
       cx += snprintf( tmp + cx, sizze - cx,
-  "]);\n\
-var options = {\n\
-          annotations: {textStyle: {fontName: 'Times-Roman',     fontSize: 28, bold: true, italic: true,      color: 'black',      opacity: 0.8    }  }\n\
-        };\n\
-         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));\n\
-        chart.draw(data, options);\n\
-      }\n\
-    </script>\n\
-      var options = {\n\
-           annotations: { textStyle: {fontName: 'Times-Roman',     fontSize: 28, bold: true, italic: true,      color: 'black',      opacity: 0.8    }  },\n\
-         hAxis: { title: 'Godzina [hh:mm]' },\n\
-         vAxis: { title: 'Temperatura [*C]' }\n\
-         };\n\
-          var chart = new google.visualization.LineChart(document.getElementById('chart_div'));\n\
-         chart.draw(data, options);\n\
-       }\n\
-   </script>\n\
-   </head>\n\
-   <body>\n\
-     <div id='chart_div' style='width: 900px; height: 500px;'></div>\n\
-     <form action='/action_page.php' >\n\
-     <div>\n\
-     <label style='font-size: 25px;height:90px;width:100px;'for='co_zrobiono'>Co zrobiono:  </label>\n\
-     <input style='font-size: 25px;height:90px;width:100px;' type='text' name='co_zrobiono'><br>\n\
-     <input style='font-szie: 65px;height:90px;width:100px; padding: 15px 32px;'type='submit' value='Submit'>\n\
-     <div>\n\
-     </form>\n\
-   </body>\n\
+  "]);\
+      var options = {\
+           annotations: { textStyle: {fontName: 'Times-Roman',     fontSize: 28, bold: true, italic: true,      color: 'black',      opacity: 0.8    }  },\
+         hAxis: { title: 'Godzina [hh:mm]' },\
+         vAxis: { title: 'Temperatura [*C]' }\
+         };\
+          var chart = new google.visualization.LineChart(document.getElementById('chart_div'));\
+         chart.draw(data, options);\
+       }\
+   </script>\
+   </head>\
+     <body>\
+        <div id='chart_div' style='width: 900px; height: 500px;'></div>\
+      </body>\  
    </html>");
 
-return tmp;
 //==================
-
-
-
-
-
+Serial.print(tmp);
+	server.send(7000, "text/html", tmp);
 }
 
 
@@ -212,6 +194,7 @@ void setup() {
   Serial.println("WiFi connected");
   
   // Start the server
+server.on("/", handleRoot);
   server.begin();
   Serial.println("Server started");
  
@@ -225,7 +208,7 @@ void setup() {
   Serial.println("\nWaiting for time");
   while (!time(nullptr)) {
     Serial.print(".");
-    delay(1000);
+    delay(100);
 }
 }
 
@@ -246,9 +229,11 @@ float getTemperature() {
 
  
 void loop() {
+     server.handleClient();
+  
   time_elapce++;
   
-  if(time_elapce == 1000000 ) {
+  if(time_elapce == 300000 ) {
     time_elapce = 0;
 
     time_t now = time(nullptr);
@@ -289,11 +274,10 @@ void loop() {
         }
 
        //if(digitalRead(button) == 0) { sendSMS(temper);}
-   
-   
+
 }
 
-
+/*
  
   // Check if a client has connecteddigitalWrite(ledB, HIGH);
   WiFiClient client = server.available();
@@ -318,7 +302,7 @@ void loop() {
   if(k>0) {date[k] = '\0'; Serial.println(date);}
   
   client.flush();
-
+*/
   /* 
   // Return the response
   client.println("HTTP/1.1 200 OK");
@@ -446,9 +430,11 @@ client.print("]");
  
   client.println("</html>");
 */
-  char t[7000] = {'<html>'};
-  client.println(t);
-  delay(1);
-  Serial.println("Client disconnected");
-  Serial.println("");
+//  char t[7000] = {'<html>'};
+//  client.println(t);
+//  delay(1);
+//  Serial.println("Client disconnected");
+//  Serial.println("");
+
+
 }
