@@ -1,5 +1,6 @@
 //
-
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -7,8 +8,6 @@
 #include "Gsender.h"
 
 #define BUF 100
-
-
 #define LDR   A0
 #define ONE_WIRE_BUS 5
 
@@ -16,8 +15,22 @@
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature DS18B20(&oneWire);
 
+  int sizze = 7000;
+  char tmp[7000];
+   float temper;
+   float temp[BUF];
+   int n = 0;
 
- 
+   int s[BUF];
+   int m[BUF];
+   int h[BUF];
+   bool b[BUF];
+
+  int tempLBase = 23;
+  int tempHBase = 40;
+  int tempL = tempLBase;
+  int tempH = tempHBase;
+  int delta = 2;
 
 const char* ssid = "Tilgin-xxQdR6SKXhzC";//type your ssid
 const char* password = "hYDaRdS84zrh8";//type your password
@@ -31,6 +44,93 @@ int ledR = 15; // red Led
 int button = 4; // button
 int time_elapce = 0;  //time between measuring temperature
 WiFiServer server(80);//Service Port
+
+
+char* printHTML() {
+
+  int cx = 0;
+  
+
+////////////////////////////////
+bool in=0;
+  cx += snprintf(tmp, sizze,\
+  "HTTP/1.1 200 OK\n\
+  Content-Type: text/html\n\
+  \n\
+  <!DOCTYPE HTML>\n\
+  <html>\n\
+  \n\
+   <head>\n\
+    <script type='text/javascript' src='https://www.google.com/jsapi'></script>\n\
+    <script type='text/javascript'>\n\
+      google.load('visualization', '1', {packages:['corechart', 'controls']});\n\
+      google.setOnLoadCallback(drawChart);\n\
+      function drawChart() {\n\
+        var data = new google.visualization.DataTable();\n\
+          data.addColumn('timeofday', 'Czas');\n\
+          data.addColumn('number', 'Temperatura');\n\
+          data.addColumn({type:'string', role:'annotation'});\n\
+          data.addRows([\n\
+  ");
+
+  char comma;
+  char message[20] = {"'uchylono szyber'"};
+  char Message[20];
+          for(int i = n; (temp[i] != 0) && (i<BUF) ; ++i) {
+  //preparing some date
+           in = 1;
+           if(i != n) {comma=',';} else { comma=' ';}
+           if(b[i] == 0) { snprintf(Message, 20, "%s", message);;} else { snprintf(Message, 20,"null");};
+    cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %d, %s]\n", comma, h[i], m[i], s[i], temp[i], Message);
+          }
+
+          for(int i = 0; (temp[i] != 0) && (i<n) ; ++i) {
+  //preparing some date
+            if(in == 1)  { comma=',';} else if(i == 0) {  comma=' '; }
+            if(b[i] == 0) { snprintf(Message, 20, "%s", message);;} else { snprintf(Message, 20,"null");};
+
+    cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %d, %s]\n", comma, h[i], m[i], s[i], temp[i], Message);
+          }
+////////////////////////////////////////////
+      cx += snprintf( tmp + cx, sizze - cx,
+  "]);\n\
+var options = {\n\
+          annotations: {textStyle: {fontName: 'Times-Roman',     fontSize: 28, bold: true, italic: true,      color: 'black',      opacity: 0.8    }  }\n\
+        };\n\
+         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));\n\
+        chart.draw(data, options);\n\
+      }\n\
+    </script>\n\
+      var options = {\n\
+           annotations: { textStyle: {fontName: 'Times-Roman',     fontSize: 28, bold: true, italic: true,      color: 'black',      opacity: 0.8    }  },\n\
+         hAxis: { title: 'Godzina [hh:mm]' },\n\
+         vAxis: { title: 'Temperatura [*C]' }\n\
+         };\n\
+          var chart = new google.visualization.LineChart(document.getElementById('chart_div'));\n\
+         chart.draw(data, options);\n\
+       }\n\
+   </script>\n\
+   </head>\n\
+   <body>\n\
+     <div id='chart_div' style='width: 900px; height: 500px;'></div>\n\
+     <form action='/action_page.php' >\n\
+     <div>\n\
+     <label style='font-size: 25px;height:90px;width:100px;'for='co_zrobiono'>Co zrobiono:  </label>\n\
+     <input style='font-size: 25px;height:90px;width:100px;' type='text' name='co_zrobiono'><br>\n\
+     <input style='font-szie: 65px;height:90px;width:100px; padding: 15px 32px;'type='submit' value='Submit'>\n\
+     <div>\n\
+     </form>\n\
+   </body>\n\
+   </html>");
+
+return tmp;
+//==================
+
+
+
+
+
+}
 
 
 void sendSMS(float temper) {
@@ -142,20 +242,7 @@ float getTemperature() {
 
  
   
-   float temper;
-   float temp[BUF];
-   int n = 0;
 
-   int s[BUF];
-   int m[BUF];
-   int h[BUF];
-   bool b[BUF];
-
-  int tempLBase = 23;
-  int tempHBase = 40;
-  int tempL = tempLBase;
-  int tempH = tempHBase;
-  int delta = 2;
 
  
 void loop() {
@@ -232,7 +319,7 @@ void loop() {
   
   client.flush();
 
-   
+  /* 
   // Return the response
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
@@ -355,10 +442,12 @@ client.print("]");
             client.println("<br>");
             client.print("Temperatura in *F = ");
             client.println(temperatureFString);
-*/
+
  
   client.println("</html>");
- 
+*/
+  char t[7000] = {'<html>'};
+  client.println(t);
   delay(1);
   Serial.println("Client disconnected");
   Serial.println("");
