@@ -82,14 +82,14 @@ bool in=0;
               in = 1;
               if(i != n) {comma=',';} else { comma=' ';}
               //if(b[i] == 0) { snprintf(Message, 20, "%s", message);;} else { snprintf(Message, 20,"null");};
-              cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %d, null]\n", comma, h[i], m[i], s[i], temp[i]);
+              cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %.2f, null]\n", comma, h[i], m[i], s[i], temp[i]);
           }
 
           for(int i = 0; (temp[i] != 0) && (i<n) ; ++i) {
               //preparing some date
               if(in == 1)  { comma=',';} else if(i != 0) {  comma=','; } else {comma=' ';}
               //if(b[i] == 0) { snprintf(Message, 20, "%s", message);;} else { snprintf(Message, 20,"null");};
-              cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %d, null]\n", comma, h[i], m[i], s[i], temp[i]);
+              cx += snprintf( tmp + cx, sizze - cx,"%c[[%d, %d, %d], %.2f, null]\n", comma, h[i], m[i], s[i], temp[i]);
           }
 ////////////////////////////////////////////
       cx += snprintf( tmp + cx, sizze - cx,
